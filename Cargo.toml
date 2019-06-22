@@ -1,0 +1,8 @@
+[package]
+name = "nicer-mecab"
+version = "0.1.0"
+authors = ["Lúcás Meier <cronokirby@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+mecab = "0.1.3"
