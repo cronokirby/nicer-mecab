@@ -13,6 +13,8 @@ pub enum ParseError {
     InsufficientParts,
     /// The part of speech couldn't be recognized
     UnknownPartOfSpeech(String),
+    /// The specific usage couldn't be recognized
+    UnknownUsage(String),
 }
 
 /// This represents a generic part of speech, such as a Noun or a Verb.
@@ -60,6 +62,44 @@ impl TryFrom<&str> for PartOfSpeech {
             "助詞" => Ok(PartOfSpeech::Particle),
             "記号" => Ok(PartOfSpeech::Punctuation),
             _ => Err(ParseError::UnknownPartOfSpeech(value.into())),
+        }
+    }
+}
+
+/// Represents more specific information about the part of speech for a morpheme.
+///
+/// For example, this specifies the difference between a particle used as part of a
+/// verb's conjugation, and a particle marking the role of a noun in a sentence.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Usage {
+    /// 一般, Used with nouns, indicates an ordinary noun as opposed to proper nouns
+    General,
+    /// 格助詞, Case marking particle, e.g. "が、の、は、に".
+    CaseMarking,
+    /// 自立, Independent, used for verbs that aren't a part of a conjugation.
+    IndependentVerb,
+}
+
+impl fmt::Display for Usage {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let jp = match *self {
+            Usage::General => "一般",
+            Usage::CaseMarking => "格助詞",
+            Usage::IndependentVerb => "自立",
+        };
+        write!(f, "{}", jp)
+    }
+}
+
+impl TryFrom<&str> for Usage {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "一般" => Ok(Usage::General),
+            "格助詞" => Ok(Usage::CaseMarking),
+            "自立" => Ok(Usage::IndependentVerb),
+            _ => Err(ParseError::UnknownUsage(value.into())),
         }
     }
 }
@@ -142,6 +182,19 @@ mod tests {
         for pos in &parts_of_speech {
             let round_trip = PartOfSpeech::try_from(format!("{}", pos).as_ref());
             assert_eq!(Ok(*pos), round_trip);
+        }
+    }
+
+    #[test]
+    fn usage_can_be_parsed_from_display() {
+        let usages = [
+            Usage::General,
+            Usage::CaseMarking,
+            Usage::IndependentVerb,
+        ];
+        for usage in &usages {
+            let round_trip = Usage::try_from(format!("{}", usage).as_ref());
+            assert_eq!(Ok(*usage), round_trip);
         }
     }
 }
