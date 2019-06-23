@@ -73,11 +73,15 @@ impl TryFrom<&str> for PartOfSpeech {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Usage {
     /// 一般, Used with nouns, indicates an ordinary noun as opposed to proper nouns
+    ///
+    /// Can also be used for self explaining punctuation, like "？".
     General,
     /// 格助詞, Case marking particle, e.g. "が、の、は、に".
     CaseMarking,
     /// 自立, Independent, used for verbs that aren't a part of a conjugation.
     IndependentVerb,
+    /// 句点, Period, with punctuation indicates the sentence ending "。".
+    Period,
 }
 
 impl fmt::Display for Usage {
@@ -86,6 +90,7 @@ impl fmt::Display for Usage {
             Usage::General => "一般",
             Usage::CaseMarking => "格助詞",
             Usage::IndependentVerb => "自立",
+            Usage::Period => "句点",
         };
         write!(f, "{}", jp)
     }
@@ -99,6 +104,7 @@ impl TryFrom<&str> for Usage {
             "一般" => Ok(Usage::General),
             "格助詞" => Ok(Usage::CaseMarking),
             "自立" => Ok(Usage::IndependentVerb),
+            "句点" => Ok(Usage::Period),
             _ => Err(ParseError::UnknownUsage(value.into())),
         }
     }
@@ -115,6 +121,8 @@ pub struct Morpheme {
     pub raw: String,
     /// Represents the part of speech corresponding to this morpheme.
     pub part_of_speech: PartOfSpeech,
+    /// This holds more specific information about how this morpheme is used.
+    pub usage: Usage,
 }
 
 /// This represents the information parsed by the analyzer.
@@ -141,9 +149,12 @@ pub fn parse_sentence(sentence: &str) -> Result<Sentence, ParseError> {
         let mut parts = rest.split(',');
         let part_of_speech_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
         let part_of_speech = PartOfSpeech::try_from(part_of_speech_raw)?;
+        let usage_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
+        let usage = Usage::try_from(usage_raw)?;
         morphemes.push(Morpheme {
             raw: raw.to_string(),
             part_of_speech,
+            usage,
         });
     }
     Ok(Sentence { morphemes })
@@ -155,16 +166,28 @@ mod tests {
 
     #[test]
     fn parse_sentence_works_for_single_words() {
-        let sentence = "猫。";
+        let sentence = "猫がいる。";
         let result = Sentence {
             morphemes: vec![
                 Morpheme {
                     raw: String::from("猫"),
                     part_of_speech: PartOfSpeech::Noun,
+                    usage: Usage::General,
+                },
+                Morpheme {
+                    raw: String::from("が"),
+                    part_of_speech: PartOfSpeech::Particle,
+                    usage: Usage::CaseMarking,
+                },
+                Morpheme {
+                    raw: String::from("いる"),
+                    part_of_speech: PartOfSpeech::Verb,
+                    usage: Usage::IndependentVerb,
                 },
                 Morpheme {
                     raw: String::from("。"),
                     part_of_speech: PartOfSpeech::Punctuation,
+                    usage: Usage::Period,
                 },
             ],
         };
@@ -191,6 +214,7 @@ mod tests {
             Usage::General,
             Usage::CaseMarking,
             Usage::IndependentVerb,
+            Usage::Period,
         ];
         for usage in &usages {
             let round_trip = Usage::try_from(format!("{}", usage).as_ref());
