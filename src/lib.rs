@@ -173,6 +173,40 @@ impl TryFrom<&str> for SpecificPOS {
     }
 }
 
+/// This holds more information about a name.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum NameType {
+    /// 一般, This indicates that no specific name type exists for this morpheme.
+    General,
+    /// 姓, Used for a person's family name.
+    FamilyName,
+    /// 名, Used for a person's first name.
+    FirstName,
+}
+impl fmt::Display for NameType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let jp = match *self {
+            NameType::General => "一般",
+            NameType::FamilyName => "姓",
+            NameType::FirstName => "名",
+        };
+        write!(f, "{}", jp)
+    }
+}
+
+impl TryFrom<&str> for NameType {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "一般" => Ok(NameType::General),
+            "姓" => Ok(NameType::FamilyName),
+            "名" => Ok(NameType::FirstName),
+            _ => Err(ParseError::UnknownSpecificPOS(value.into())),
+        }
+    }
+}
+
 /// A morpheme represents a single part of a sentence with meaning.
 ///
 /// Sentences are split into individual morphemes, which form the sentence together.
@@ -338,6 +372,15 @@ mod tests {
         for s in &specific_pos {
             let round_trip = SpecificPOS::try_from(format!("{}", s).as_ref());
             assert_eq!(Ok(*s), round_trip);
+        }
+    }
+
+    #[test]
+    fn name_type_can_be_parsed_from_display() {
+        let name_types = [NameType::General, NameType::FamilyName, NameType::FirstName];
+        for name in &name_types {
+            let round_trip = NameType::try_from(format!("{}", name).as_ref());
+            assert_eq!(Ok(*name), round_trip);
         }
     }
 }
