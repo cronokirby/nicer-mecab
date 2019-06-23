@@ -222,6 +222,8 @@ pub struct Morpheme {
     pub usage: Usage,
     /// If given, this holds specific information about the part of speech in general.
     pub specific_pos: Option<SpecificPOS>,
+    /// If given, this holds information about what type of name this morpheme is.
+    pub name_type: Option<NameType>,
 }
 
 /// This represents the information parsed by the analyzer.
@@ -253,11 +255,14 @@ impl Sentence {
             let usage = Usage::try_from(usage_raw)?;
             let specific_pos_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
             let specific_pos = from_asterisk(specific_pos_raw)?;
+            let name_type_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
+            let name_type = from_asterisk(name_type_raw)?;
             morphemes.push(Morpheme {
                 raw: raw.to_string(),
                 part_of_speech,
                 usage,
                 specific_pos,
+                name_type,
             });
         }
         Ok(Sentence { morphemes })
@@ -278,54 +283,63 @@ mod tests {
                     part_of_speech: PartOfSpeech::Noun,
                     usage: Usage::ProperNoun,
                     specific_pos: Some(SpecificPOS::Region),
+                    name_type: Some(NameType::General),
                 },
                 Morpheme {
                     raw: String::from("に"),
                     part_of_speech: PartOfSpeech::Particle,
                     usage: Usage::CaseMarking,
                     specific_pos: Some(SpecificPOS::General),
+                    name_type: None,
                 },
                 Morpheme {
                     raw: String::from("村上"),
                     part_of_speech: PartOfSpeech::Noun,
                     usage: Usage::ProperNoun,
                     specific_pos: Some(SpecificPOS::PersonalName),
+                    name_type: Some(NameType::FamilyName),
                 },
                 Morpheme {
                     raw: String::from("春樹"),
                     part_of_speech: PartOfSpeech::Noun,
                     usage: Usage::ProperNoun,
                     specific_pos: Some(SpecificPOS::PersonalName),
+                    name_type: Some(NameType::FirstName),
                 },
                 Morpheme {
                     raw: String::from("の"),
                     part_of_speech: PartOfSpeech::Particle,
                     usage: Usage::Attribution,
                     specific_pos: None,
+                    name_type: None,
                 },
                 Morpheme {
                     raw: String::from("猫"),
                     part_of_speech: PartOfSpeech::Noun,
                     usage: Usage::General,
                     specific_pos: None,
+                    name_type: None,
                 },
                 Morpheme {
                     raw: String::from("が"),
                     part_of_speech: PartOfSpeech::Particle,
                     usage: Usage::CaseMarking,
                     specific_pos: Some(SpecificPOS::General),
+                    name_type: None,
                 },
                 Morpheme {
                     raw: String::from("いる"),
                     part_of_speech: PartOfSpeech::Verb,
                     usage: Usage::IndependentVerb,
                     specific_pos: None,
+                    name_type: None,
                 },
                 Morpheme {
                     raw: String::from("。"),
                     part_of_speech: PartOfSpeech::Punctuation,
                     usage: Usage::Period,
                     specific_pos: None,
+                    name_type: None,
                 },
             ],
         };
