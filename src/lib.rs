@@ -87,12 +87,14 @@ pub enum Usage {
     ///
     /// Can also be used for self explaining punctuation, like "？".
     General,
-    /// 格助詞, Case marking particle, e.g. "が、の、は、に".
+    /// 格助詞, Case marking particle, e.g. "が、は、に".
     CaseMarking,
     /// 自立, Independent, used for verbs that aren't a part of a conjugation.
     IndependentVerb,
     /// 固有名詞, Proper noun, used for nouns like places or names.
     ProperNoun,
+    /// 連体化, Attribution, used for "の".
+    Attribution,
     /// 句点, Period, with punctuation indicates the sentence ending "。".
     Period,
 }
@@ -104,6 +106,7 @@ impl fmt::Display for Usage {
             Usage::CaseMarking => "格助詞",
             Usage::IndependentVerb => "自立",
             Usage::ProperNoun => "固有名詞",
+            Usage::Attribution => "連体化",
             Usage::Period => "句点",
         };
         write!(f, "{}", jp)
@@ -119,6 +122,7 @@ impl TryFrom<&str> for Usage {
             "格助詞" => Ok(Usage::CaseMarking),
             "自立" => Ok(Usage::IndependentVerb),
             "固有名詞" => Ok(Usage::ProperNoun),
+            "連体化" => Ok(Usage::Attribution),
             "句点" => Ok(Usage::Period),
             _ => Err(ParseError::UnknownUsage(value.into())),
         }
@@ -232,7 +236,7 @@ mod tests {
 
     #[test]
     fn parse_sentence_works_for_single_words() {
-        let sentence = "東京に猫がいる。";
+        let sentence = "東京に村上春樹の猫がいる。";
         let result = Sentence {
             morphemes: vec![
                 Morpheme {
@@ -246,6 +250,24 @@ mod tests {
                     part_of_speech: PartOfSpeech::Particle,
                     usage: Usage::CaseMarking,
                     specific_pos: Some(SpecificPOS::General),
+                },
+                Morpheme {
+                    raw: String::from("村上"),
+                    part_of_speech: PartOfSpeech::Noun,
+                    usage: Usage::ProperNoun,
+                    specific_pos: Some(SpecificPOS::PersonalName),
+                },
+                Morpheme {
+                    raw: String::from("春樹"),
+                    part_of_speech: PartOfSpeech::Noun,
+                    usage: Usage::ProperNoun,
+                    specific_pos: Some(SpecificPOS::PersonalName),
+                },
+                Morpheme {
+                    raw: String::from("の"),
+                    part_of_speech: PartOfSpeech::Particle,
+                    usage: Usage::Attribution,
+                    specific_pos: None,
                 },
                 Morpheme {
                     raw: String::from("猫"),
@@ -297,6 +319,7 @@ mod tests {
             Usage::CaseMarking,
             Usage::IndependentVerb,
             Usage::ProperNoun,
+            Usage::Attribution,
             Usage::Period,
         ];
         for usage in &usages {
