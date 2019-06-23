@@ -15,6 +15,8 @@ pub enum ParseError {
     UnknownPartOfSpeech(String),
     /// The specific usage couldn't be recognized
     UnknownUsage(String),
+    /// The specific part of speech couldn't be recognized
+    UnknownSpecificPOS(String),
 }
 
 /// This represents a generic part of speech, such as a Noun or a Verb.
@@ -66,7 +68,7 @@ impl TryFrom<&str> for PartOfSpeech {
     }
 }
 
-/// Represents more specific information about the part of speech for a morpheme.
+/// Represents more specific information about how a morpheme is used in a sentence.
 ///
 /// For example, this specifies the difference between a particle used as part of a
 /// verb's conjugation, and a particle marking the role of a noun in a sentence.
@@ -106,6 +108,50 @@ impl TryFrom<&str> for Usage {
             "自立" => Ok(Usage::IndependentVerb),
             "句点" => Ok(Usage::Period),
             _ => Err(ParseError::UnknownUsage(value.into())),
+        }
+    }
+}
+
+/// This provides more information about what specific part of speech a morpheme has.
+///
+/// For example, this allows us to distinguish between proper place names, and
+/// proper person names. If the usage is general, this enum isn't relevant.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum SpecificPOS {
+    /// 一般, This indicates that no further information exists for the specific usage.
+    ///
+    /// This will be given with particles and pronouns, for example. In general, this
+    /// comes when the usage is not general, but there's no extra information about
+    /// the part of speech.
+    General,
+    /// 人名, This indicates a noun related to people.
+    ///
+    /// This can be used for pronouns like "私", as well as names like "田中".
+    PersonalName,
+    /// 地域, This indicates that the word is used for a region, e.g. "東京".
+    Region,
+}
+
+impl fmt::Display for SpecificPOS {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let jp = match *self {
+            SpecificPOS::General => "一般",
+            SpecificPOS::PersonalName => "人名",
+            SpecificPOS::Region => "地域",
+        };
+        write!(f, "{}", jp)
+    }
+}
+
+impl TryFrom<&str> for SpecificPOS {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "一般" => Ok(SpecificPOS::General),
+            "人名" => Ok(SpecificPOS::PersonalName),
+            "地域" => Ok(SpecificPOS::Region),
+            _ => Err(ParseError::UnknownSpecificPOS(value.into())),
         }
     }
 }
@@ -219,6 +265,19 @@ mod tests {
         for usage in &usages {
             let round_trip = Usage::try_from(format!("{}", usage).as_ref());
             assert_eq!(Ok(*usage), round_trip);
+        }
+    }
+
+    #[test]
+    fn specific_pos_can_be_parsed_from_display() {
+        let specific_pos = [
+            SpecificPOS::General,
+            SpecificPOS::PersonalName,
+            SpecificPOS::Region,
+        ];
+        for s in &specific_pos {
+            let round_trip = SpecificPOS::try_from(format!("{}", s).as_ref());
+            assert_eq!(Ok(*s), round_trip);
         }
     }
 }
