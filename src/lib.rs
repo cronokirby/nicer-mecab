@@ -34,6 +34,8 @@ pub enum PartOfSpeech {
     /// This is also used to mark parts of a verb's conjugation, such as the
     /// "て" in "食べて".
     Particle,
+    /// 記号, Punctuation, such as "。".
+    Punctuation,
 }
 
 impl fmt::Display for PartOfSpeech {
@@ -42,6 +44,7 @@ impl fmt::Display for PartOfSpeech {
             PartOfSpeech::Noun => "名詞",
             PartOfSpeech::Verb => "動詞",
             PartOfSpeech::Particle => "助詞",
+            PartOfSpeech::Punctuation => "記号",
         };
         write!(f, "{}", jp)
     }
@@ -55,6 +58,7 @@ impl TryFrom<&str> for PartOfSpeech {
             "名詞" => Ok(PartOfSpeech::Noun),
             "動詞" => Ok(PartOfSpeech::Verb),
             "助詞" => Ok(PartOfSpeech::Particle),
+            "記号" => Ok(PartOfSpeech::Punctuation),
             _ => Err(ParseError::UnknownPartOfSpeech(value.into())),
         }
     }
@@ -111,14 +115,18 @@ mod tests {
 
     #[test]
     fn parse_sentence_works_for_single_words() {
-        let sentence = "猫";
-        let raw = String::from("猫");
-        let part_of_speech = PartOfSpeech::Noun;
+        let sentence = "猫。";
         let result = Sentence {
-            morphemes: vec![Morpheme {
-                raw,
-                part_of_speech,
-            }],
+            morphemes: vec![
+                Morpheme {
+                    raw: String::from("猫"),
+                    part_of_speech: PartOfSpeech::Noun,
+                },
+                Morpheme {
+                    raw: String::from("。"),
+                    part_of_speech: PartOfSpeech::Punctuation,
+                },
+            ],
         };
         assert_eq!(Ok(result), parse_sentence(sentence));
     }
@@ -129,6 +137,7 @@ mod tests {
             PartOfSpeech::Noun,
             PartOfSpeech::Verb,
             PartOfSpeech::Particle,
+            PartOfSpeech::Punctuation,
         ];
         for pos in &parts_of_speech {
             let round_trip = PartOfSpeech::try_from(format!("{}", pos).as_ref());
