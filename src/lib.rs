@@ -19,6 +19,15 @@ pub enum ParseError {
     UnknownSpecificPOS(String),
 }
 
+// This is useful for parsing the optional fields given by mecab
+fn from_asterisk<'a, T: TryFrom<&'a str>>(value: &'a str) -> Result<Option<T>, T::Error> {
+    if value == "*" {
+        Ok(None)
+    } else {
+        T::try_from(value).map(Some)
+    }
+}
+
 /// This represents a generic part of speech, such as a Noun or a Verb.
 ///
 /// The names for these may not be correct from a grammarian's perspective.
@@ -169,6 +178,8 @@ pub struct Morpheme {
     pub part_of_speech: PartOfSpeech,
     /// This holds more specific information about how this morpheme is used.
     pub usage: Usage,
+    /// If given, this holds specific information about the part of speech in general.
+    pub specific_pos: Option<SpecificPOS>,
 }
 
 /// This represents the information parsed by the analyzer.
@@ -198,10 +209,13 @@ impl Sentence {
             let part_of_speech = PartOfSpeech::try_from(part_of_speech_raw)?;
             let usage_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
             let usage = Usage::try_from(usage_raw)?;
+            let specific_pos_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
+            let specific_pos = from_asterisk(specific_pos_raw)?;
             morphemes.push(Morpheme {
                 raw: raw.to_string(),
                 part_of_speech,
                 usage,
+                specific_pos,
             });
         }
         Ok(Sentence { morphemes })
@@ -221,21 +235,25 @@ mod tests {
                     raw: String::from("猫"),
                     part_of_speech: PartOfSpeech::Noun,
                     usage: Usage::General,
+                    specific_pos: None,
                 },
                 Morpheme {
                     raw: String::from("が"),
                     part_of_speech: PartOfSpeech::Particle,
                     usage: Usage::CaseMarking,
+                    specific_pos: Some(SpecificPOS::General),
                 },
                 Morpheme {
                     raw: String::from("いる"),
                     part_of_speech: PartOfSpeech::Verb,
                     usage: Usage::IndependentVerb,
+                    specific_pos: None,
                 },
                 Morpheme {
                     raw: String::from("。"),
                     part_of_speech: PartOfSpeech::Punctuation,
                     usage: Usage::Period,
+                    specific_pos: None,
                 },
             ],
         };
