@@ -122,4 +122,17 @@ mod tests {
         };
         assert_eq!(Ok(result), parse_sentence(sentence));
     }
+
+    #[test]
+    fn parts_of_speech_can_be_parsed_from_display() {
+        let parts_of_speech = [
+            PartOfSpeech::Noun,
+            PartOfSpeech::Verb,
+            PartOfSpeech::Particle,
+        ];
+        for pos in &parts_of_speech {
+            let round_trip = PartOfSpeech::try_from(format!("{}", pos).as_ref());
+            assert_eq!(Ok(*pos), round_trip);
+        }
+    }
 }
