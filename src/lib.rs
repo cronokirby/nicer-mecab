@@ -178,32 +178,34 @@ pub struct Sentence {
     pub morphemes: Vec<Morpheme>,
 }
 
-pub fn parse_sentence(sentence: &str) -> Result<Sentence, ParseError> {
-    let mut tagger = Tagger::new("");
-    tagger.parse_nbest_init(sentence);
-    let mecab_out = tagger.next().unwrap();
-    let mut morphemes = Vec::new();
-    for l in mecab_out.lines() {
-        if l == "EOS" {
-            break;
+impl Sentence {
+    pub fn parse(sentence: &str) -> Result<Self, ParseError> {
+        let mut tagger = Tagger::new("");
+        tagger.parse_nbest_init(sentence);
+        let mecab_out = tagger.next().unwrap();
+        let mut morphemes = Vec::new();
+        for l in mecab_out.lines() {
+            if l == "EOS" {
+                break;
+            }
+            // We know that this index exists, based on mecab output
+            let tab_index = l.find('\t').unwrap();
+            let (raw, rest) = l.split_at(tab_index);
+            // Remove the first tab character
+            let rest = &rest[1..];
+            let mut parts = rest.split(',');
+            let part_of_speech_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
+            let part_of_speech = PartOfSpeech::try_from(part_of_speech_raw)?;
+            let usage_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
+            let usage = Usage::try_from(usage_raw)?;
+            morphemes.push(Morpheme {
+                raw: raw.to_string(),
+                part_of_speech,
+                usage,
+            });
         }
-        // We know that this index exists, based on mecab output
-        let tab_index = l.find('\t').unwrap();
-        let (raw, rest) = l.split_at(tab_index);
-        // Remove the first tab character
-        let rest = &rest[1..];
-        let mut parts = rest.split(',');
-        let part_of_speech_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
-        let part_of_speech = PartOfSpeech::try_from(part_of_speech_raw)?;
-        let usage_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
-        let usage = Usage::try_from(usage_raw)?;
-        morphemes.push(Morpheme {
-            raw: raw.to_string(),
-            part_of_speech,
-            usage,
-        });
+        Ok(Sentence { morphemes })
     }
-    Ok(Sentence { morphemes })
 }
 
 #[cfg(test)]
@@ -237,7 +239,7 @@ mod tests {
                 },
             ],
         };
-        assert_eq!(Ok(result), parse_sentence(sentence));
+        assert_eq!(Ok(result), Sentence::parse(sentence));
     }
 
     #[test]
