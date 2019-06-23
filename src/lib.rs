@@ -91,6 +91,8 @@ pub enum Usage {
     CaseMarking,
     /// 自立, Independent, used for verbs that aren't a part of a conjugation.
     IndependentVerb,
+    /// 固有名詞, Proper noun, used for nouns like places or names.
+    ProperNoun,
     /// 句点, Period, with punctuation indicates the sentence ending "。".
     Period,
 }
@@ -101,6 +103,7 @@ impl fmt::Display for Usage {
             Usage::General => "一般",
             Usage::CaseMarking => "格助詞",
             Usage::IndependentVerb => "自立",
+            Usage::ProperNoun => "固有名詞",
             Usage::Period => "句点",
         };
         write!(f, "{}", jp)
@@ -115,6 +118,7 @@ impl TryFrom<&str> for Usage {
             "一般" => Ok(Usage::General),
             "格助詞" => Ok(Usage::CaseMarking),
             "自立" => Ok(Usage::IndependentVerb),
+            "固有名詞" => Ok(Usage::ProperNoun),
             "句点" => Ok(Usage::Period),
             _ => Err(ParseError::UnknownUsage(value.into())),
         }
@@ -228,9 +232,21 @@ mod tests {
 
     #[test]
     fn parse_sentence_works_for_single_words() {
-        let sentence = "猫がいる。";
+        let sentence = "東京に猫がいる。";
         let result = Sentence {
             morphemes: vec![
+                Morpheme {
+                    raw: String::from("東京"),
+                    part_of_speech: PartOfSpeech::Noun,
+                    usage: Usage::ProperNoun,
+                    specific_pos: Some(SpecificPOS::Region),
+                },
+                Morpheme {
+                    raw: String::from("に"),
+                    part_of_speech: PartOfSpeech::Particle,
+                    usage: Usage::CaseMarking,
+                    specific_pos: Some(SpecificPOS::General),
+                },
                 Morpheme {
                     raw: String::from("猫"),
                     part_of_speech: PartOfSpeech::Noun,
@@ -280,6 +296,7 @@ mod tests {
             Usage::General,
             Usage::CaseMarking,
             Usage::IndependentVerb,
+            Usage::ProperNoun,
             Usage::Period,
         ];
         for usage in &usages {
