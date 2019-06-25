@@ -334,12 +334,15 @@ impl TryFrom<&str> for VerbType {
 pub enum VerbForm {
     /// 基本形, The fundamental form for a verb, e.g. "見る"
     Fundamental,
+    /// 連用タ接続, The continuous form for certain verbs, e.g. "住んでいる".
+    ContinuousTaConnection,
 }
 
 impl fmt::Display for VerbForm {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let jp = match *self {
             VerbForm::Fundamental => "基本形",
+            VerbForm::ContinuousTaConnection => "連用タ接続",
         };
         write!(f, "{}", jp)
     }
@@ -351,6 +354,7 @@ impl TryFrom<&str> for VerbForm {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "基本形" => Ok(VerbForm::Fundamental),
+            "連用タ接続" => Ok(VerbForm::ContinuousTaConnection),
             _ => Err(ParseError::UnknownVerbForm(value.into())),
         }
     }
@@ -684,7 +688,7 @@ mod tests {
 
     #[test]
     fn verb_form_can_be_parsed_from_display() {
-        let verb_forms = [VerbForm::Fundamental];
+        let verb_forms = [VerbForm::Fundamental, VerbForm::ContinuousTaConnection];
         for v in &verb_forms {
             let round_trip = VerbForm::try_from(format!("{}", v).as_ref());
             assert_eq!(Ok(*v), round_trip);
