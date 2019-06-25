@@ -435,7 +435,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_sentence_works_for_single_words() {
+    fn parse_sentence_works_for_an_example_sentence() {
         let sentence = "東京に村上春樹の猫がいると走る。";
         let result = Sentence {
             morphemes: vec![
@@ -574,6 +574,18 @@ mod tests {
             ],
         };
         assert_eq!(Ok(result), Sentence::parse(sentence));
+    }
+
+    #[test]
+    fn parse_sentence_is_ok_for_kokoro() {
+        let kokoro = include_str!("../sample-texts/kokoro.txt");
+        for sentence in kokoro.lines() {
+            let res = Sentence::parse(sentence);
+            if !res.is_ok() {
+                println!("{}\n{:?}", sentence, res);
+            }
+            assert!(Sentence::parse(sentence).is_ok());
+        }
     }
 
     #[test]
