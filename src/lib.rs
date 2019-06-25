@@ -93,6 +93,8 @@ pub enum Usage {
     ///
     /// Can also be used for self explaining punctuation, like "？".
     General,
+    /// 代名詞, Used for personal pronouns, such as "私"
+    PersonalPronoun,
     /// 格助詞, Case marking particle, e.g. "が、は、に".
     CaseMarking,
     /// 接続助詞, Conjunction particle, e.g. "と"
@@ -111,6 +113,7 @@ impl fmt::Display for Usage {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let jp = match *self {
             Usage::General => "一般",
+            Usage::PersonalPronoun => "代名詞",
             Usage::CaseMarking => "格助詞",
             Usage::Conjunction => "接続助詞",
             Usage::IndependentVerb => "自立",
@@ -128,6 +131,7 @@ impl TryFrom<&str> for Usage {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "一般" => Ok(Usage::General),
+            "代名詞" => Ok(Usage::PersonalPronoun),
             "格助詞" => Ok(Usage::CaseMarking),
             "自立" => Ok(Usage::IndependentVerb),
             "接続助詞" => Ok(Usage::Conjunction),
@@ -521,7 +525,7 @@ mod tests {
                     verb_form: None,
                     root_form: "が".into(),
                     reading: "ガ".into(),
-                    pronunciation: "ガ".into()
+                    pronunciation: "ガ".into(),
                 },
                 Morpheme {
                     raw: "いる".into(),
@@ -533,7 +537,7 @@ mod tests {
                     verb_form: Some(VerbForm::Fundamental),
                     root_form: "いる".into(),
                     reading: "イル".into(),
-                    pronunciation: "イル".into()
+                    pronunciation: "イル".into(),
                 },
                 Morpheme {
                     raw: "と".into(),
@@ -545,7 +549,7 @@ mod tests {
                     verb_form: None,
                     root_form: "と".into(),
                     reading: "ト".into(),
-                    pronunciation: "ト".into()
+                    pronunciation: "ト".into(),
                 },
                 Morpheme {
                     raw: "走る".into(),
@@ -557,7 +561,7 @@ mod tests {
                     verb_form: Some(VerbForm::Fundamental),
                     root_form: "走る".into(),
                     reading: "ハシル".into(),
-                    pronunciation: "ハシル".into()
+                    pronunciation: "ハシル".into(),
                 },
                 Morpheme {
                     raw: "。".into(),
@@ -569,7 +573,7 @@ mod tests {
                     verb_form: None,
                     root_form: "。".into(),
                     reading: "。".into(),
-                    pronunciation: "。".into()
+                    pronunciation: "。".into(),
                 },
             ],
         };
@@ -606,6 +610,7 @@ mod tests {
     fn usage_can_be_parsed_from_display() {
         let usages = [
             Usage::General,
+            Usage::PersonalPronoun,
             Usage::CaseMarking,
             Usage::Conjunction,
             Usage::IndependentVerb,
