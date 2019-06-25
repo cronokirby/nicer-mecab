@@ -323,6 +323,8 @@ pub enum VerbType {
     Kuru,
     /// The auxilary form "た" gets its own verb type
     Ta,
+    /// The auxilary form "ない" gets its own verb type
+    Nai,
 }
 
 impl fmt::Display for VerbType {
@@ -332,6 +334,7 @@ impl fmt::Display for VerbType {
             VerbType::Godan(col) => write!(f, "五段・{}行", col),
             VerbType::Kuru => write!(f, "カ変・来ル"),
             VerbType::Ta => write!(f, "特殊・タ"),
+            VerbType::Nai => write!(f, "特殊・ナイ"),
         }
     }
 }
@@ -348,6 +351,7 @@ impl TryFrom<&str> for VerbType {
             "一段" => Ok(VerbType::Ichidan),
             "カ変・来ル" => Ok(VerbType::Kuru),
             "特殊・タ" => Ok(VerbType::Ta),
+            "特殊・ナイ" => Ok(VerbType::Nai),
             _ => Err(ParseError::UnknownVerbType(value.into())),
         }
     }
@@ -465,8 +469,8 @@ impl Sentence {
             let verb_form_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
             let verb_form = from_asterisk(verb_form_raw)?;
             let root_form = parts.next().ok_or(ParseError::InsufficientParts)?.into();
-            let reading = parts.next().ok_or(ParseError::InsufficientParts)?.into();
-            let pronunciation = parts.next().ok_or(ParseError::InsufficientParts)?.into();
+            let reading = parts.next().unwrap_or("").into();
+            let pronunciation = parts.next().unwrap_or("").into();
             morphemes.push(Morpheme {
                 raw: raw.to_string(),
                 part_of_speech,
@@ -719,6 +723,7 @@ mod tests {
             VerbType::Godan(VerbColumn::Ba),
             VerbType::Kuru,
             VerbType::Ta,
+            VerbType::Nai,
         ];
         for v in &verb_types {
             let round_trip = VerbType::try_from(format!("{}", v).as_ref());
