@@ -53,6 +53,8 @@ pub enum PartOfSpeech {
     /// This is also used to mark parts of a verb's conjugation, such as the
     /// "て" in "食べて".
     Particle,
+    /// 副詞, Adverb, such as "常に"
+    Adverb,
     /// 連体詞, Adnominal adjective, such as "その".
     AdnominalAdjective,
     /// 記号, Punctuation, such as "。".
@@ -64,6 +66,7 @@ impl fmt::Display for PartOfSpeech {
         let jp = match *self {
             PartOfSpeech::Noun => "名詞",
             PartOfSpeech::Verb => "動詞",
+            PartOfSpeech::Adverb => "副詞",
             PartOfSpeech::AdnominalAdjective => "連体詞",
             PartOfSpeech::Particle => "助詞",
             PartOfSpeech::Punctuation => "記号",
@@ -79,6 +82,7 @@ impl TryFrom<&str> for PartOfSpeech {
         match value {
             "名詞" => Ok(PartOfSpeech::Noun),
             "動詞" => Ok(PartOfSpeech::Verb),
+            "副詞" => Ok(PartOfSpeech::Adverb),
             "連体詞" => Ok(PartOfSpeech::AdnominalAdjective),
             "助詞" => Ok(PartOfSpeech::Particle),
             "記号" => Ok(PartOfSpeech::Punctuation),
@@ -364,7 +368,7 @@ pub struct Morpheme {
     /// Represents the part of speech corresponding to this morpheme.
     pub part_of_speech: PartOfSpeech,
     /// This holds more specific information about how this morpheme is used.
-    pub usage: Usage,
+    pub usage: Option<Usage>,
     /// If given, this holds specific information about the part of speech in general.
     pub specific_pos: Option<SpecificPOS>,
     /// If given, this holds information about what type of name this morpheme is.
@@ -413,7 +417,7 @@ impl Sentence {
             let part_of_speech_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
             let part_of_speech = PartOfSpeech::try_from(part_of_speech_raw)?;
             let usage_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
-            let usage = Usage::try_from(usage_raw)?;
+            let usage = from_asterisk(usage_raw)?;
             let specific_pos_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
             let specific_pos = from_asterisk(specific_pos_raw)?;
             let name_type_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
@@ -454,7 +458,7 @@ mod tests {
                 Morpheme {
                     raw: "東京".into(),
                     part_of_speech: PartOfSpeech::Noun,
-                    usage: Usage::ProperNoun,
+                    usage: Some(Usage::ProperNoun),
                     specific_pos: Some(SpecificPOS::Region),
                     name_type: Some(NameType::General),
                     verb_type: None,
@@ -466,7 +470,7 @@ mod tests {
                 Morpheme {
                     raw: "に".into(),
                     part_of_speech: PartOfSpeech::Particle,
-                    usage: Usage::CaseMarking,
+                    usage: Some(Usage::CaseMarking),
                     specific_pos: Some(SpecificPOS::General),
                     name_type: None,
                     verb_type: None,
@@ -478,7 +482,7 @@ mod tests {
                 Morpheme {
                     raw: "村上".into(),
                     part_of_speech: PartOfSpeech::Noun,
-                    usage: Usage::ProperNoun,
+                    usage: Some(Usage::ProperNoun),
                     specific_pos: Some(SpecificPOS::PersonalName),
                     name_type: Some(NameType::FamilyName),
                     verb_type: None,
@@ -490,7 +494,7 @@ mod tests {
                 Morpheme {
                     raw: "春樹".into(),
                     part_of_speech: PartOfSpeech::Noun,
-                    usage: Usage::ProperNoun,
+                    usage: Some(Usage::ProperNoun),
                     specific_pos: Some(SpecificPOS::PersonalName),
                     name_type: Some(NameType::FirstName),
                     verb_type: None,
@@ -502,7 +506,7 @@ mod tests {
                 Morpheme {
                     raw: "の".into(),
                     part_of_speech: PartOfSpeech::Particle,
-                    usage: Usage::Attribution,
+                    usage: Some(Usage::Attribution),
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
@@ -514,7 +518,7 @@ mod tests {
                 Morpheme {
                     raw: "猫".into(),
                     part_of_speech: PartOfSpeech::Noun,
-                    usage: Usage::General,
+                    usage: Some(Usage::General),
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
@@ -526,7 +530,7 @@ mod tests {
                 Morpheme {
                     raw: "が".into(),
                     part_of_speech: PartOfSpeech::Particle,
-                    usage: Usage::CaseMarking,
+                    usage: Some(Usage::CaseMarking),
                     specific_pos: Some(SpecificPOS::General),
                     name_type: None,
                     verb_type: None,
@@ -538,7 +542,7 @@ mod tests {
                 Morpheme {
                     raw: "いる".into(),
                     part_of_speech: PartOfSpeech::Verb,
-                    usage: Usage::IndependentVerb,
+                    usage: Some(Usage::IndependentVerb),
                     specific_pos: None,
                     name_type: None,
                     verb_type: Some(VerbType::Ichidan),
@@ -550,7 +554,7 @@ mod tests {
                 Morpheme {
                     raw: "と".into(),
                     part_of_speech: PartOfSpeech::Particle,
-                    usage: Usage::Conjunction,
+                    usage: Some(Usage::Conjunction),
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
@@ -562,7 +566,7 @@ mod tests {
                 Morpheme {
                     raw: "走る".into(),
                     part_of_speech: PartOfSpeech::Verb,
-                    usage: Usage::IndependentVerb,
+                    usage: Some(Usage::IndependentVerb),
                     specific_pos: None,
                     name_type: None,
                     verb_type: Some(VerbType::Godan(VerbColumn::Ra)),
@@ -574,7 +578,7 @@ mod tests {
                 Morpheme {
                     raw: "。".into(),
                     part_of_speech: PartOfSpeech::Punctuation,
-                    usage: Usage::Period,
+                    usage: Some(Usage::Period),
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
@@ -605,6 +609,7 @@ mod tests {
         let parts_of_speech = [
             PartOfSpeech::Noun,
             PartOfSpeech::Verb,
+            PartOfSpeech::Adverb,
             PartOfSpeech::AdnominalAdjective,
             PartOfSpeech::Particle,
             PartOfSpeech::Punctuation,
