@@ -17,6 +17,10 @@ pub enum ParseError {
     UnknownUsage(String),
     /// The specific part of speech couldn't be recognized
     UnknownSpecificPOS(String),
+    /// The verb column couldn't be recognized
+    UnknownVerbColumn(String),
+    /// The verb type couldn't be identified
+    UnknownVerbType(String),
 }
 
 // This is useful for parsing the optional fields given by mecab
@@ -183,6 +187,7 @@ pub enum NameType {
     /// 名, Used for a person's first name.
     FirstName,
 }
+
 impl fmt::Display for NameType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let jp = match *self {
@@ -203,6 +208,99 @@ impl TryFrom<&str> for NameType {
             "姓" => Ok(NameType::FamilyName),
             "名" => Ok(NameType::FirstName),
             _ => Err(ParseError::UnknownSpecificPOS(value.into())),
+        }
+    }
+}
+
+/// This represents a column in the hiragana table identifying a verb conjugation.
+///
+/// Informally called "u-verbs", these verbs have endings corresponding to a specific
+/// column of the Japanese syllabary. For example, verbs in the "ka" column, end in "ku",
+/// e.g. "聞く".
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum VerbColumn {
+    A,
+    Ka,
+    Ga,
+    Sa,
+    Ta,
+    Na,
+    Ba,
+    Ma,
+    Ra,
+}
+
+impl fmt::Display for VerbColumn {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let jp = match *self {
+            VerbColumn::A => "ア",
+            VerbColumn::Ka => "カ",
+            VerbColumn::Ga => "ガ",
+            VerbColumn::Sa => "サ",
+            VerbColumn::Ta => "タ",
+            VerbColumn::Na => "ナ",
+            VerbColumn::Ba => "バ",
+            VerbColumn::Ma => "マ",
+            VerbColumn::Ra => "ラ",
+        };
+        write!(f, "{}", jp)
+    }
+}
+
+impl TryFrom<&str> for VerbColumn {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "ア" => Ok(VerbColumn::A),
+            "カ" => Ok(VerbColumn::Ka),
+            "ガ" => Ok(VerbColumn::Ga),
+            "サ" => Ok(VerbColumn::Sa),
+            "タ" => Ok(VerbColumn::Ta),
+            "ナ" => Ok(VerbColumn::Na),
+            "バ" => Ok(VerbColumn::Ba),
+            "マ" => Ok(VerbColumn::Ma),
+            "ラ" => Ok(VerbColumn::Ra),
+            _ => Err(ParseError::UnknownVerbColumn(value.into())),
+        }
+    }
+}
+
+/// This represents what type of verb this is.
+///
+/// This differentiates between regular verbs, and irregular verbs.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum VerbType {
+    /// 一段, The standard "ru verb" conjugation such as "食べる"
+    Ichidan,
+    /// 五段, The "u verb" conjugation such as "聞く"
+    Godan(VerbColumn),
+    /// The verb "来る" gets its own classification
+    Kuru,
+}
+
+impl fmt::Display for VerbType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            VerbType::Ichidan => write!(f, "一段"),
+            VerbType::Godan(col) => write!(f, "五段・{}行", col),
+            VerbType::Kuru => write!(f, "カ変・来ル"),
+        }
+    }
+}
+
+impl TryFrom<&str> for VerbType {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let godan = "五段・";
+        if value.starts_with(godan) {
+            return VerbColumn::try_from(&value[9..12]).map(VerbType::Godan);
+        }
+        match value {
+            "一段" => Ok(VerbType::Ichidan),
+            "カ変・来ル" => Ok(VerbType::Kuru),
+            _ => Err(ParseError::UnknownVerbColumn(value.into())),
         }
     }
 }
@@ -395,6 +493,27 @@ mod tests {
         for name in &name_types {
             let round_trip = NameType::try_from(format!("{}", name).as_ref());
             assert_eq!(Ok(*name), round_trip);
+        }
+    }
+
+    #[test]
+    fn verb_type_can_be_parsed_from_display() {
+        let verb_types = [
+            VerbType::Ichidan,
+            VerbType::Godan(VerbColumn::A),
+            VerbType::Godan(VerbColumn::Ka),
+            VerbType::Godan(VerbColumn::Ga),
+            VerbType::Godan(VerbColumn::Ma),
+            VerbType::Godan(VerbColumn::Sa),
+            VerbType::Godan(VerbColumn::Ta),
+            VerbType::Godan(VerbColumn::Na),
+            VerbType::Godan(VerbColumn::Ra),
+            VerbType::Godan(VerbColumn::Ba),
+            VerbType::Kuru
+        ];
+        for v in &verb_types {
+            let round_trip = VerbType::try_from(format!("{}", v).as_ref());
+            assert_eq!(Ok(*v), round_trip);
         }
     }
 }
