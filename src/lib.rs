@@ -93,6 +93,8 @@ pub enum Usage {
     General,
     /// 格助詞, Case marking particle, e.g. "が、は、に".
     CaseMarking,
+    /// 接続助詞, Conjunction particle, e.g. "と"
+    Conjunction,
     /// 自立, Independent, used for verbs that aren't a part of a conjugation.
     IndependentVerb,
     /// 固有名詞, Proper noun, used for nouns like places or names.
@@ -108,6 +110,7 @@ impl fmt::Display for Usage {
         let jp = match *self {
             Usage::General => "一般",
             Usage::CaseMarking => "格助詞",
+            Usage::Conjunction => "接続助詞",
             Usage::IndependentVerb => "自立",
             Usage::ProperNoun => "固有名詞",
             Usage::Attribution => "連体化",
@@ -125,6 +128,7 @@ impl TryFrom<&str> for Usage {
             "一般" => Ok(Usage::General),
             "格助詞" => Ok(Usage::CaseMarking),
             "自立" => Ok(Usage::IndependentVerb),
+            "接続助詞" => Ok(Usage::Conjunction),
             "固有名詞" => Ok(Usage::ProperNoun),
             "連体化" => Ok(Usage::Attribution),
             "句点" => Ok(Usage::Period),
@@ -322,6 +326,8 @@ pub struct Morpheme {
     pub specific_pos: Option<SpecificPOS>,
     /// If given, this holds information about what type of name this morpheme is.
     pub name_type: Option<NameType>,
+    /// If given, this holds information about what type of conjugation this verb has.
+    pub verb_type: Option<VerbType>,
 }
 
 /// This represents the information parsed by the analyzer.
@@ -355,12 +361,15 @@ impl Sentence {
             let specific_pos = from_asterisk(specific_pos_raw)?;
             let name_type_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
             let name_type = from_asterisk(name_type_raw)?;
+            let verb_type_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
+            let verb_type = from_asterisk(verb_type_raw)?;
             morphemes.push(Morpheme {
                 raw: raw.to_string(),
                 part_of_speech,
                 usage,
                 specific_pos,
                 name_type,
+                verb_type,
             });
         }
         Ok(Sentence { morphemes })
@@ -373,7 +382,7 @@ mod tests {
 
     #[test]
     fn parse_sentence_works_for_single_words() {
-        let sentence = "東京に村上春樹の猫がいる。";
+        let sentence = "東京に村上春樹の猫がいると走る。";
         let result = Sentence {
             morphemes: vec![
                 Morpheme {
@@ -382,6 +391,7 @@ mod tests {
                     usage: Usage::ProperNoun,
                     specific_pos: Some(SpecificPOS::Region),
                     name_type: Some(NameType::General),
+                    verb_type: None,
                 },
                 Morpheme {
                     raw: String::from("に"),
@@ -389,6 +399,7 @@ mod tests {
                     usage: Usage::CaseMarking,
                     specific_pos: Some(SpecificPOS::General),
                     name_type: None,
+                    verb_type: None,
                 },
                 Morpheme {
                     raw: String::from("村上"),
@@ -396,6 +407,7 @@ mod tests {
                     usage: Usage::ProperNoun,
                     specific_pos: Some(SpecificPOS::PersonalName),
                     name_type: Some(NameType::FamilyName),
+                    verb_type: None,
                 },
                 Morpheme {
                     raw: String::from("春樹"),
@@ -403,6 +415,7 @@ mod tests {
                     usage: Usage::ProperNoun,
                     specific_pos: Some(SpecificPOS::PersonalName),
                     name_type: Some(NameType::FirstName),
+                    verb_type: None,
                 },
                 Morpheme {
                     raw: String::from("の"),
@@ -410,6 +423,7 @@ mod tests {
                     usage: Usage::Attribution,
                     specific_pos: None,
                     name_type: None,
+                    verb_type: None,
                 },
                 Morpheme {
                     raw: String::from("猫"),
@@ -417,6 +431,7 @@ mod tests {
                     usage: Usage::General,
                     specific_pos: None,
                     name_type: None,
+                    verb_type: None,
                 },
                 Morpheme {
                     raw: String::from("が"),
@@ -424,6 +439,7 @@ mod tests {
                     usage: Usage::CaseMarking,
                     specific_pos: Some(SpecificPOS::General),
                     name_type: None,
+                    verb_type: None,
                 },
                 Morpheme {
                     raw: String::from("いる"),
@@ -431,6 +447,23 @@ mod tests {
                     usage: Usage::IndependentVerb,
                     specific_pos: None,
                     name_type: None,
+                    verb_type: Some(VerbType::Ichidan),
+                },
+                Morpheme {
+                    raw: String::from("と"),
+                    part_of_speech: PartOfSpeech::Particle,
+                    usage: Usage::Conjunction,
+                    specific_pos: None,
+                    name_type: None,
+                    verb_type: None,
+                },
+                Morpheme {
+                    raw: String::from("走る"),
+                    part_of_speech: PartOfSpeech::Verb,
+                    usage: Usage::IndependentVerb,
+                    specific_pos: None,
+                    name_type: None,
+                    verb_type: Some(VerbType::Godan(VerbColumn::Ra)),
                 },
                 Morpheme {
                     raw: String::from("。"),
@@ -438,6 +471,7 @@ mod tests {
                     usage: Usage::Period,
                     specific_pos: None,
                     name_type: None,
+                    verb_type: None,
                 },
             ],
         };
@@ -463,6 +497,7 @@ mod tests {
         let usages = [
             Usage::General,
             Usage::CaseMarking,
+            Usage::Conjunction,
             Usage::IndependentVerb,
             Usage::ProperNoun,
             Usage::Attribution,
@@ -509,7 +544,7 @@ mod tests {
             VerbType::Godan(VerbColumn::Na),
             VerbType::Godan(VerbColumn::Ra),
             VerbType::Godan(VerbColumn::Ba),
-            VerbType::Kuru
+            VerbType::Kuru,
         ];
         for v in &verb_types {
             let round_trip = VerbType::try_from(format!("{}", v).as_ref());
