@@ -111,6 +111,10 @@ pub enum Usage {
     Conjunction,
     /// 自立, Independent, used for verbs that aren't a part of a conjugation.
     IndependentVerb,
+    /// 非自立, Non independent, used for verbs part of a conjugation.
+    /// 
+    /// For example, this applies to the "いる" in "食べている".
+    NonIndependentVerb,
     /// 固有名詞, Proper noun, used for nouns like places or names.
     ProperNoun,
     /// 連体化, Attribution, used for "の".
@@ -128,6 +132,7 @@ impl fmt::Display for Usage {
             Usage::BindingParticle => "係助詞",
             Usage::Conjunction => "接続助詞",
             Usage::IndependentVerb => "自立",
+            Usage::NonIndependentVerb => "非自立",
             Usage::ProperNoun => "固有名詞",
             Usage::Attribution => "連体化",
             Usage::Period => "句点",
@@ -146,6 +151,7 @@ impl TryFrom<&str> for Usage {
             "格助詞" => Ok(Usage::CaseMarking),
             "係助詞" => Ok(Usage::BindingParticle),
             "自立" => Ok(Usage::IndependentVerb),
+            "非自立" => Ok(Usage::NonIndependentVerb),
             "接続助詞" => Ok(Usage::Conjunction),
             "固有名詞" => Ok(Usage::ProperNoun),
             "連体化" => Ok(Usage::Attribution),
@@ -633,6 +639,7 @@ mod tests {
             Usage::BindingParticle,
             Usage::Conjunction,
             Usage::IndependentVerb,
+            Usage::NonIndependentVerb,
             Usage::ProperNoun,
             Usage::Attribution,
             Usage::Period,
