@@ -21,6 +21,8 @@ pub enum ParseError {
     UnknownVerbColumn(String),
     /// The verb type couldn't be identified
     UnknownVerbType(String),
+    /// The verb form couldn't be identified
+    UnknownVerbForm(String),
 }
 
 // This is useful for parsing the optional fields given by mecab
@@ -309,6 +311,35 @@ impl TryFrom<&str> for VerbType {
     }
 }
 
+/// Represents the form a verb takes on in a sentence.
+///
+/// This is used to distinguish a plain verb from a verb stem, for example.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum VerbForm {
+    /// 基本形, The fundamental form for a verb, e.g. "見る"
+    Fundamental,
+}
+
+impl fmt::Display for VerbForm {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let jp = match *self {
+            VerbForm::Fundamental => "基本形",
+        };
+        write!(f, "{}", jp)
+    }
+}
+
+impl TryFrom<&str> for VerbForm {
+    type Error = ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "基本形" => Ok(VerbForm::Fundamental),
+            _ => Err(ParseError::UnknownVerbForm(value.into())),
+        }
+    }
+}
+
 /// A morpheme represents a single part of a sentence with meaning.
 ///
 /// Sentences are split into individual morphemes, which form the sentence together.
@@ -328,6 +359,8 @@ pub struct Morpheme {
     pub name_type: Option<NameType>,
     /// If given, this holds information about what type of conjugation this verb has.
     pub verb_type: Option<VerbType>,
+    /// If given, this holds information about what type of form this verb takes on.
+    pub verb_form: Option<VerbForm>,
 }
 
 /// This represents the information parsed by the analyzer.
@@ -363,6 +396,8 @@ impl Sentence {
             let name_type = from_asterisk(name_type_raw)?;
             let verb_type_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
             let verb_type = from_asterisk(verb_type_raw)?;
+            let verb_form_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
+            let verb_form = from_asterisk(verb_form_raw)?;
             morphemes.push(Morpheme {
                 raw: raw.to_string(),
                 part_of_speech,
@@ -370,6 +405,7 @@ impl Sentence {
                 specific_pos,
                 name_type,
                 verb_type,
+                verb_form,
             });
         }
         Ok(Sentence { morphemes })
@@ -392,6 +428,7 @@ mod tests {
                     specific_pos: Some(SpecificPOS::Region),
                     name_type: Some(NameType::General),
                     verb_type: None,
+                    verb_form: None,
                 },
                 Morpheme {
                     raw: String::from("に"),
@@ -400,6 +437,7 @@ mod tests {
                     specific_pos: Some(SpecificPOS::General),
                     name_type: None,
                     verb_type: None,
+                    verb_form: None,
                 },
                 Morpheme {
                     raw: String::from("村上"),
@@ -408,6 +446,7 @@ mod tests {
                     specific_pos: Some(SpecificPOS::PersonalName),
                     name_type: Some(NameType::FamilyName),
                     verb_type: None,
+                    verb_form: None,
                 },
                 Morpheme {
                     raw: String::from("春樹"),
@@ -416,6 +455,7 @@ mod tests {
                     specific_pos: Some(SpecificPOS::PersonalName),
                     name_type: Some(NameType::FirstName),
                     verb_type: None,
+                    verb_form: None,
                 },
                 Morpheme {
                     raw: String::from("の"),
@@ -424,6 +464,7 @@ mod tests {
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
+                    verb_form: None,
                 },
                 Morpheme {
                     raw: String::from("猫"),
@@ -432,6 +473,7 @@ mod tests {
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
+                    verb_form: None,
                 },
                 Morpheme {
                     raw: String::from("が"),
@@ -440,6 +482,7 @@ mod tests {
                     specific_pos: Some(SpecificPOS::General),
                     name_type: None,
                     verb_type: None,
+                    verb_form: None,
                 },
                 Morpheme {
                     raw: String::from("いる"),
@@ -448,6 +491,7 @@ mod tests {
                     specific_pos: None,
                     name_type: None,
                     verb_type: Some(VerbType::Ichidan),
+                    verb_form: Some(VerbForm::Fundamental),
                 },
                 Morpheme {
                     raw: String::from("と"),
@@ -456,6 +500,7 @@ mod tests {
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
+                    verb_form: None,
                 },
                 Morpheme {
                     raw: String::from("走る"),
@@ -464,6 +509,7 @@ mod tests {
                     specific_pos: None,
                     name_type: None,
                     verb_type: Some(VerbType::Godan(VerbColumn::Ra)),
+                    verb_form: Some(VerbForm::Fundamental),
                 },
                 Morpheme {
                     raw: String::from("。"),
@@ -472,6 +518,7 @@ mod tests {
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
+                    verb_form: None,
                 },
             ],
         };
@@ -548,6 +595,15 @@ mod tests {
         ];
         for v in &verb_types {
             let round_trip = VerbType::try_from(format!("{}", v).as_ref());
+            assert_eq!(Ok(*v), round_trip);
+        }
+    }
+
+    #[test]
+    fn verb_form_can_be_parsed_from_display() {
+        let verb_forms = [VerbForm::Fundamental];
+        for v in &verb_forms {
+            let round_trip = VerbForm::try_from(format!("{}", v).as_ref());
             assert_eq!(Ok(*v), round_trip);
         }
     }
