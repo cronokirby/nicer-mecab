@@ -112,7 +112,7 @@ pub enum Usage {
     /// 自立, Independent, used for verbs that aren't a part of a conjugation.
     IndependentVerb,
     /// 非自立, Non independent, used for verbs part of a conjugation.
-    /// 
+    ///
     /// For example, this applies to the "いる" in "食べている".
     NonIndependentVerb,
     /// 固有名詞, Proper noun, used for nouns like places or names.
@@ -340,6 +340,8 @@ impl TryFrom<&str> for VerbType {
 pub enum VerbForm {
     /// 基本形, The fundamental form for a verb, e.g. "見る"
     Fundamental,
+    /// 連用形, The conjunctive form of a verb, e.g. "見" in "見ます"
+    Conjunctive,
     /// 連用タ接続, The continuous form for certain verbs, e.g. "住んでいる".
     ContinuousTaConnection,
 }
@@ -348,6 +350,7 @@ impl fmt::Display for VerbForm {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let jp = match *self {
             VerbForm::Fundamental => "基本形",
+            VerbForm::Conjunctive => "連用形",
             VerbForm::ContinuousTaConnection => "連用タ接続",
         };
         write!(f, "{}", jp)
@@ -360,6 +363,7 @@ impl TryFrom<&str> for VerbForm {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "基本形" => Ok(VerbForm::Fundamental),
+            "連用形" => Ok(VerbForm::Conjunctive),
             "連用タ接続" => Ok(VerbForm::ContinuousTaConnection),
             _ => Err(ParseError::UnknownVerbForm(value.into())),
         }
@@ -695,7 +699,11 @@ mod tests {
 
     #[test]
     fn verb_form_can_be_parsed_from_display() {
-        let verb_forms = [VerbForm::Fundamental, VerbForm::ContinuousTaConnection];
+        let verb_forms = [
+            VerbForm::Fundamental,
+            VerbForm::Conjunctive,
+            VerbForm::ContinuousTaConnection,
+        ];
         for v in &verb_forms {
             let round_trip = VerbForm::try_from(format!("{}", v).as_ref());
             assert_eq!(Ok(*v), round_trip);
