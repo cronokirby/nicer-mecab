@@ -309,6 +309,8 @@ pub enum VerbType {
     Godan(VerbColumn),
     /// The verb "来る" gets its own classification
     Kuru,
+    /// The auxilary form "た" gets its own verb type
+    Ta,
 }
 
 impl fmt::Display for VerbType {
@@ -317,6 +319,7 @@ impl fmt::Display for VerbType {
             VerbType::Ichidan => write!(f, "一段"),
             VerbType::Godan(col) => write!(f, "五段・{}行", col),
             VerbType::Kuru => write!(f, "カ変・来ル"),
+            VerbType::Ta => write!(f, "特殊・タ"),
         }
     }
 }
@@ -332,7 +335,8 @@ impl TryFrom<&str> for VerbType {
         match value {
             "一段" => Ok(VerbType::Ichidan),
             "カ変・来ル" => Ok(VerbType::Kuru),
-            _ => Err(ParseError::UnknownVerbColumn(value.into())),
+            "特殊・タ" => Ok(VerbType::Ta),
+            _ => Err(ParseError::UnknownVerbType(value.into())),
         }
     }
 }
@@ -695,6 +699,7 @@ mod tests {
             VerbType::Godan(VerbColumn::Ra),
             VerbType::Godan(VerbColumn::Ba),
             VerbType::Kuru,
+            VerbType::Ta,
         ];
         for v in &verb_types {
             let round_trip = VerbType::try_from(format!("{}", v).as_ref());
