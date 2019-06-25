@@ -53,6 +53,8 @@ pub enum PartOfSpeech {
     /// This is also used to mark parts of a verb's conjugation, such as the
     /// "て" in "食べて".
     Particle,
+    /// 連体詞, Adnominal adjective, such as "その".
+    AdnominalAdjective,
     /// 記号, Punctuation, such as "。".
     Punctuation,
 }
@@ -62,6 +64,7 @@ impl fmt::Display for PartOfSpeech {
         let jp = match *self {
             PartOfSpeech::Noun => "名詞",
             PartOfSpeech::Verb => "動詞",
+            PartOfSpeech::AdnominalAdjective => "連体詞",
             PartOfSpeech::Particle => "助詞",
             PartOfSpeech::Punctuation => "記号",
         };
@@ -76,6 +79,7 @@ impl TryFrom<&str> for PartOfSpeech {
         match value {
             "名詞" => Ok(PartOfSpeech::Noun),
             "動詞" => Ok(PartOfSpeech::Verb),
+            "連体詞" => Ok(PartOfSpeech::AdnominalAdjective),
             "助詞" => Ok(PartOfSpeech::Particle),
             "記号" => Ok(PartOfSpeech::Punctuation),
             _ => Err(ParseError::UnknownPartOfSpeech(value.into())),
@@ -601,6 +605,7 @@ mod tests {
         let parts_of_speech = [
             PartOfSpeech::Noun,
             PartOfSpeech::Verb,
+            PartOfSpeech::AdnominalAdjective,
             PartOfSpeech::Particle,
             PartOfSpeech::Punctuation,
         ];
