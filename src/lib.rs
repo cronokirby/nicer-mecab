@@ -48,6 +48,8 @@ pub enum PartOfSpeech {
     ///
     /// This is used specifically to mark the verb stem, and not the conjugation.
     Verb,
+    /// 助動詞, An auxilary verb, such as "た" in "見た"
+    AuxilaryVerb,
     /// 助詞, A particle, such as "は".
     ///
     /// This is also used to mark parts of a verb's conjugation, such as the
@@ -66,6 +68,7 @@ impl fmt::Display for PartOfSpeech {
         let jp = match *self {
             PartOfSpeech::Noun => "名詞",
             PartOfSpeech::Verb => "動詞",
+            PartOfSpeech::AuxilaryVerb => "助動詞",
             PartOfSpeech::Adverb => "副詞",
             PartOfSpeech::AdnominalAdjective => "連体詞",
             PartOfSpeech::Particle => "助詞",
@@ -82,6 +85,7 @@ impl TryFrom<&str> for PartOfSpeech {
         match value {
             "名詞" => Ok(PartOfSpeech::Noun),
             "動詞" => Ok(PartOfSpeech::Verb),
+            "助動詞" => Ok(PartOfSpeech::AuxilaryVerb),
             "副詞" => Ok(PartOfSpeech::Adverb),
             "連体詞" => Ok(PartOfSpeech::AdnominalAdjective),
             "助詞" => Ok(PartOfSpeech::Particle),
@@ -623,6 +627,7 @@ mod tests {
         let parts_of_speech = [
             PartOfSpeech::Noun,
             PartOfSpeech::Verb,
+            PartOfSpeech::AuxilaryVerb,
             PartOfSpeech::Adverb,
             PartOfSpeech::AdnominalAdjective,
             PartOfSpeech::Particle,
