@@ -191,6 +191,8 @@ pub enum SpecificPOS {
     PersonalName,
     /// 地域, This indicates that the word is used for a region, e.g. "東京".
     Region,
+    /// 引用, Quotation, this is used for "と" when used to quote something.
+    Quotation,
 }
 
 impl fmt::Display for SpecificPOS {
@@ -199,6 +201,7 @@ impl fmt::Display for SpecificPOS {
             SpecificPOS::General => "一般",
             SpecificPOS::PersonalName => "人名",
             SpecificPOS::Region => "地域",
+            SpecificPOS::Quotation => "引用",
         };
         write!(f, "{}", jp)
     }
@@ -212,6 +215,7 @@ impl TryFrom<&str> for SpecificPOS {
             "一般" => Ok(SpecificPOS::General),
             "人名" => Ok(SpecificPOS::PersonalName),
             "地域" => Ok(SpecificPOS::Region),
+            "引用" => Ok(SpecificPOS::Quotation),
             _ => Err(ParseError::UnknownSpecificPOS(value.into())),
         }
     }
@@ -679,6 +683,7 @@ mod tests {
             SpecificPOS::General,
             SpecificPOS::PersonalName,
             SpecificPOS::Region,
+            SpecificPOS::Quotation,
         ];
         for s in &specific_pos {
             let round_trip = SpecificPOS::try_from(format!("{}", s).as_ref());
