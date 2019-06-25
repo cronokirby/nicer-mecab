@@ -59,6 +59,8 @@ pub enum PartOfSpeech {
     Adverb,
     /// 連体詞, Adnominal adjective, such as "その".
     AdnominalAdjective,
+    /// 接続詞, Conjunctions, such as "だから"
+    Conjunction,
     /// 記号, Punctuation, such as "。".
     Punctuation,
 }
@@ -71,6 +73,7 @@ impl fmt::Display for PartOfSpeech {
             PartOfSpeech::AuxilaryVerb => "助動詞",
             PartOfSpeech::Adverb => "副詞",
             PartOfSpeech::AdnominalAdjective => "連体詞",
+            PartOfSpeech::Conjunction => "接続詞",
             PartOfSpeech::Particle => "助詞",
             PartOfSpeech::Punctuation => "記号",
         };
@@ -87,6 +90,7 @@ impl TryFrom<&str> for PartOfSpeech {
             "動詞" => Ok(PartOfSpeech::Verb),
             "助動詞" => Ok(PartOfSpeech::AuxilaryVerb),
             "副詞" => Ok(PartOfSpeech::Adverb),
+            "接続詞" => Ok(PartOfSpeech::Conjunction),
             "連体詞" => Ok(PartOfSpeech::AdnominalAdjective),
             "助詞" => Ok(PartOfSpeech::Particle),
             "記号" => Ok(PartOfSpeech::Punctuation),
@@ -111,6 +115,8 @@ pub enum Usage {
     CaseMarking,
     /// 係助詞, Binding particle, e.g. "は、も"
     BindingParticle,
+    /// 副助詞, Adverbial particle, e.g. "でも"
+    AdverbialParticle,
     /// 接続助詞, Conjunction particle, e.g. "と"
     Conjunction,
     /// 自立, Independent, used for verbs that aren't a part of a conjugation.
@@ -134,6 +140,7 @@ impl fmt::Display for Usage {
             Usage::PersonalPronoun => "代名詞",
             Usage::CaseMarking => "格助詞",
             Usage::BindingParticle => "係助詞",
+            Usage::AdverbialParticle => "副助詞",
             Usage::Conjunction => "接続助詞",
             Usage::IndependentVerb => "自立",
             Usage::NonIndependentVerb => "非自立",
@@ -154,6 +161,7 @@ impl TryFrom<&str> for Usage {
             "代名詞" => Ok(Usage::PersonalPronoun),
             "格助詞" => Ok(Usage::CaseMarking),
             "係助詞" => Ok(Usage::BindingParticle),
+            "副助詞" => Ok(Usage::AdverbialParticle),
             "自立" => Ok(Usage::IndependentVerb),
             "非自立" => Ok(Usage::NonIndependentVerb),
             "接続助詞" => Ok(Usage::Conjunction),
@@ -635,6 +643,7 @@ mod tests {
             PartOfSpeech::Adverb,
             PartOfSpeech::AdnominalAdjective,
             PartOfSpeech::Particle,
+            PartOfSpeech::Conjunction,
             PartOfSpeech::Punctuation,
         ];
         for pos in &parts_of_speech {
@@ -650,6 +659,7 @@ mod tests {
             Usage::PersonalPronoun,
             Usage::CaseMarking,
             Usage::BindingParticle,
+            Usage::AdverbialParticle,
             Usage::Conjunction,
             Usage::IndependentVerb,
             Usage::NonIndependentVerb,
