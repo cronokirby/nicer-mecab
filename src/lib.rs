@@ -361,6 +361,18 @@ pub struct Morpheme {
     pub verb_type: Option<VerbType>,
     /// If given, this holds information about what type of form this verb takes on.
     pub verb_form: Option<VerbForm>,
+    /// This contains the root form of the morpheme.
+    ///
+    /// For example, a conjugated verb will show its canonical form, e.g. "見る"
+    pub root_form: String,
+    /// A katakana representation of the syllables forming the morpheme.
+    pub reading: String,
+    /// A katakana representation of the pronunciation forming the morpheme.
+    ///
+    /// The difference between this field and the last one, is how long vowels are presented.
+    /// In this field, long vowels are represented using a "ー", e.g. "トーキョー", instead
+    /// of "トウキョウ" like the reading field
+    pub pronunciation: String,
 }
 
 /// This represents the information parsed by the analyzer.
@@ -398,6 +410,9 @@ impl Sentence {
             let verb_type = from_asterisk(verb_type_raw)?;
             let verb_form_raw = parts.next().ok_or(ParseError::InsufficientParts)?;
             let verb_form = from_asterisk(verb_form_raw)?;
+            let root_form = parts.next().ok_or(ParseError::InsufficientParts)?.into();
+            let reading = parts.next().ok_or(ParseError::InsufficientParts)?.into();
+            let pronunciation = parts.next().ok_or(ParseError::InsufficientParts)?.into();
             morphemes.push(Morpheme {
                 raw: raw.to_string(),
                 part_of_speech,
@@ -406,6 +421,9 @@ impl Sentence {
                 name_type,
                 verb_type,
                 verb_form,
+                root_form,
+                reading,
+                pronunciation,
             });
         }
         Ok(Sentence { morphemes })
@@ -422,103 +440,136 @@ mod tests {
         let result = Sentence {
             morphemes: vec![
                 Morpheme {
-                    raw: String::from("東京"),
+                    raw: "東京".into(),
                     part_of_speech: PartOfSpeech::Noun,
                     usage: Usage::ProperNoun,
                     specific_pos: Some(SpecificPOS::Region),
                     name_type: Some(NameType::General),
                     verb_type: None,
                     verb_form: None,
+                    root_form: "東京".into(),
+                    reading: "トウキョウ".into(),
+                    pronunciation: "トーキョー".into(),
                 },
                 Morpheme {
-                    raw: String::from("に"),
+                    raw: "に".into(),
                     part_of_speech: PartOfSpeech::Particle,
                     usage: Usage::CaseMarking,
                     specific_pos: Some(SpecificPOS::General),
                     name_type: None,
                     verb_type: None,
                     verb_form: None,
+                    root_form: "に".into(),
+                    reading: "ニ".into(),
+                    pronunciation: "ニ".into(),
                 },
                 Morpheme {
-                    raw: String::from("村上"),
+                    raw: "村上".into(),
                     part_of_speech: PartOfSpeech::Noun,
                     usage: Usage::ProperNoun,
                     specific_pos: Some(SpecificPOS::PersonalName),
                     name_type: Some(NameType::FamilyName),
                     verb_type: None,
                     verb_form: None,
+                    root_form: "村上".into(),
+                    reading: "ムラカミ".into(),
+                    pronunciation: "ムラカミ".into(),
                 },
                 Morpheme {
-                    raw: String::from("春樹"),
+                    raw: "春樹".into(),
                     part_of_speech: PartOfSpeech::Noun,
                     usage: Usage::ProperNoun,
                     specific_pos: Some(SpecificPOS::PersonalName),
                     name_type: Some(NameType::FirstName),
                     verb_type: None,
                     verb_form: None,
+                    root_form: "春樹".into(),
+                    reading: "ハルキ".into(),
+                    pronunciation: "ハルキ".into(),
                 },
                 Morpheme {
-                    raw: String::from("の"),
+                    raw: "の".into(),
                     part_of_speech: PartOfSpeech::Particle,
                     usage: Usage::Attribution,
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
                     verb_form: None,
+                    root_form: "の".into(),
+                    reading: "ノ".into(),
+                    pronunciation: "ノ".into(),
                 },
                 Morpheme {
-                    raw: String::from("猫"),
+                    raw: "猫".into(),
                     part_of_speech: PartOfSpeech::Noun,
                     usage: Usage::General,
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
                     verb_form: None,
+                    root_form: "猫".into(),
+                    reading: "ネコ".into(),
+                    pronunciation: "ネコ".into(),
                 },
                 Morpheme {
-                    raw: String::from("が"),
+                    raw: "が".into(),
                     part_of_speech: PartOfSpeech::Particle,
                     usage: Usage::CaseMarking,
                     specific_pos: Some(SpecificPOS::General),
                     name_type: None,
                     verb_type: None,
                     verb_form: None,
+                    root_form: "が".into(),
+                    reading: "ガ".into(),
+                    pronunciation: "ガ".into()
                 },
                 Morpheme {
-                    raw: String::from("いる"),
+                    raw: "いる".into(),
                     part_of_speech: PartOfSpeech::Verb,
                     usage: Usage::IndependentVerb,
                     specific_pos: None,
                     name_type: None,
                     verb_type: Some(VerbType::Ichidan),
                     verb_form: Some(VerbForm::Fundamental),
+                    root_form: "いる".into(),
+                    reading: "イル".into(),
+                    pronunciation: "イル".into()
                 },
                 Morpheme {
-                    raw: String::from("と"),
+                    raw: "と".into(),
                     part_of_speech: PartOfSpeech::Particle,
                     usage: Usage::Conjunction,
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
                     verb_form: None,
+                    root_form: "と".into(),
+                    reading: "ト".into(),
+                    pronunciation: "ト".into()
                 },
                 Morpheme {
-                    raw: String::from("走る"),
+                    raw: "走る".into(),
                     part_of_speech: PartOfSpeech::Verb,
                     usage: Usage::IndependentVerb,
                     specific_pos: None,
                     name_type: None,
                     verb_type: Some(VerbType::Godan(VerbColumn::Ra)),
                     verb_form: Some(VerbForm::Fundamental),
+                    root_form: "走る".into(),
+                    reading: "ハシル".into(),
+                    pronunciation: "ハシル".into()
                 },
                 Morpheme {
-                    raw: String::from("。"),
+                    raw: "。".into(),
                     part_of_speech: PartOfSpeech::Punctuation,
                     usage: Usage::Period,
                     specific_pos: None,
                     name_type: None,
                     verb_type: None,
                     verb_form: None,
+                    root_form: "。".into(),
+                    reading: "。".into(),
+                    pronunciation: "。".into()
                 },
             ],
         };
