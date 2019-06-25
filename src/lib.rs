@@ -362,6 +362,8 @@ pub enum VerbForm {
     Fundamental,
     /// 連用形, The conjunctive form of a verb, e.g. "見" in "見ます"
     Conjunctive,
+    /// 未然形, The imperfective form of a verb, e.g. "待ち明け".
+    Imperfective,
     /// 連用タ接続, The continuous form for certain verbs, e.g. "住んでいる".
     ContinuousTaConnection,
 }
@@ -371,6 +373,7 @@ impl fmt::Display for VerbForm {
         let jp = match *self {
             VerbForm::Fundamental => "基本形",
             VerbForm::Conjunctive => "連用形",
+            VerbForm::Imperfective => "未然形",
             VerbForm::ContinuousTaConnection => "連用タ接続",
         };
         write!(f, "{}", jp)
@@ -384,6 +387,7 @@ impl TryFrom<&str> for VerbForm {
         match value {
             "基本形" => Ok(VerbForm::Fundamental),
             "連用形" => Ok(VerbForm::Conjunctive),
+            "未然形" => Ok(VerbForm::Imperfective),
             "連用タ接続" => Ok(VerbForm::ContinuousTaConnection),
             _ => Err(ParseError::UnknownVerbForm(value.into())),
         }
@@ -727,6 +731,7 @@ mod tests {
         let verb_forms = [
             VerbForm::Fundamental,
             VerbForm::Conjunctive,
+            VerbForm::Imperfective,
             VerbForm::ContinuousTaConnection,
         ];
         for v in &verb_forms {
