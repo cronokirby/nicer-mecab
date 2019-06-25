@@ -95,8 +95,10 @@ pub enum Usage {
     General,
     /// 代名詞, Used for personal pronouns, such as "私"
     PersonalPronoun,
-    /// 格助詞, Case marking particle, e.g. "が、は、に".
+    /// 格助詞, Case marking particle, e.g. "が、に".
     CaseMarking,
+    /// 係助詞, Binding particle, e.g. "は、も"
+    BindingParticle,
     /// 接続助詞, Conjunction particle, e.g. "と"
     Conjunction,
     /// 自立, Independent, used for verbs that aren't a part of a conjugation.
@@ -115,6 +117,7 @@ impl fmt::Display for Usage {
             Usage::General => "一般",
             Usage::PersonalPronoun => "代名詞",
             Usage::CaseMarking => "格助詞",
+            Usage::BindingParticle => "係助詞",
             Usage::Conjunction => "接続助詞",
             Usage::IndependentVerb => "自立",
             Usage::ProperNoun => "固有名詞",
@@ -133,6 +136,7 @@ impl TryFrom<&str> for Usage {
             "一般" => Ok(Usage::General),
             "代名詞" => Ok(Usage::PersonalPronoun),
             "格助詞" => Ok(Usage::CaseMarking),
+            "係助詞" => Ok(Usage::BindingParticle),
             "自立" => Ok(Usage::IndependentVerb),
             "接続助詞" => Ok(Usage::Conjunction),
             "固有名詞" => Ok(Usage::ProperNoun),
@@ -612,6 +616,7 @@ mod tests {
             Usage::General,
             Usage::PersonalPronoun,
             Usage::CaseMarking,
+            Usage::BindingParticle,
             Usage::Conjunction,
             Usage::IndependentVerb,
             Usage::ProperNoun,
